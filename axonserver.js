@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const cors = require("cors");
 const crypto = require('crypto');
 
+console.log('sucessfully worked');
+
 const app = express();
 
 app.use(bodyParser.json());
