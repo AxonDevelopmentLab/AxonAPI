@@ -30,8 +30,12 @@ const getServices = {
     await servicesSys.validateUpdateCreate(MainAccount.ID, 'instalockapp');
     const getServiceDB = await servicesSys.getService(MainAccount.ID, 'instalockapp');
     if (getServiceDB === false) return { status: 400 };
+
+    let recreateStatistics = JSON.parse(JSON.stringify(getServiceDB));
+    recreateStatistics.allowPicks = true;
+    if (Number(getStatistics.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
     
-    return getServiceDB;
+    return recreateStatistics;
   },
   "access.instalockapp": async (MainAccount, SObj) => {
     const ThreadDetected = securityValidator.InstalockAPP(SObj);
