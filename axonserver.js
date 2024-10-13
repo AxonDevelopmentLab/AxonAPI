@@ -1,17 +1,33 @@
-const express = require('express');
+const { execSync } = require('child_process');
 const compression = require('compression');
 const bodyParser = require('body-parser');
-const { execSync } = require('child_process');
+const mongoose = require('mongoose')
+const express = require('express');
+const crypto = require('crypto');
 const helmet = require('helmet');
 const cors = require("cors");
-const crypto = require('crypto');
-
 const app = express();
 
-app.use(bodyParser.json());
+mongoose.connect(process.env.MongooseAuth, { useNewUrlParser: true, useUnifiedTopology: true });
+
+let cache = {
+  uptime: 0,
+  total: 0,
+  hour: 0
+}
+
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "https://axonhub.glitch.me"],
+    scriptSrcAttr: ["'self'", "'unsafe-inline'"],
+  },
+}), bodyParser.json(), express.json({ limit: '1mb' }), express.urlencoded({ limit: '1mb', extended: true }), compression(), cors());
+
 app.post('/git', (req, res) => {
   let hmac = crypto.createHmac("sha1", process.env.SECRET);
   let sig  = "sha1=" + hmac.update(JSON.stringify(req.body)).digest("hex");
+
   if (req.headers['x-github-event'] == "push" && sig == req.headers['x-hub-signature']) {
     execSync('chmod 777 ./git.sh'); 
     execSync('./git.sh')
@@ -21,20 +37,18 @@ app.post('/git', (req, res) => {
   return res.sendStatus(200);
 });
 
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'", "https://axonhub.glitch.me"],
-    scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-  },
-}));
-
-app.use(express.json({ limit: '1mb' }), express.urlencoded({ limit: '1mb', extended: true }), compression(), cors());
-
-let TotalRequests = 0;
-
-const mongoose = require('mongoose')
-mongoose.connect(process.env.MongooseAuth, { useNewUrlParser: true, useUnifiedTopology: true });
+app.get('/', (req, res) => {
+  cache.total++;
+  cache.hour++;
+  res.send({ status: 200, requests: {
+    total: cache.total,
+    last_hour: cache.hour,
+    statistics: {
+      average_per_hour: Number(cache.total / cache.uptime).toFixed(2),
+      ratelimit: `${cache.hour}/4000`
+    }
+  }})
+});
 
 const routes = [
   { url: '/auth/login', type: 'post', path: 'auth/login.js' },
@@ -53,10 +67,9 @@ const routes = [
   { url: '/store/checkout/status', type: 'post', path: 'store/status.js' },
 ];
 
-app.get('/', (req, res) => { TotalRequests++; res.send({ status: 200, requestsSinceLastRestart: TotalRequests })});
 routes.forEach(route => {
     app[route.type](route.url, (req, res) => {
-        TotalRequests++;
+        cache.total++; cache.hour++;
         const RequestIP = req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress;
         const getService = require('./services/' + route.path);
         getService.load(RequestIP, req, res, route.url);
@@ -64,6 +77,7 @@ routes.forEach(route => {
 });
 
 const server = app.listen(8080, () => { console.clear(); console.log('[AxonHub] Service is running.')});
-
 const background_cron = require('./services/background/cron.js');
 background_cron.start();
+
+setInterval(() => { cache.uptime++; cache.hour = 0; }, 1000 * 60 * 60);
