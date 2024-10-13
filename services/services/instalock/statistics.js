@@ -36,7 +36,11 @@ exports.load = async (IP, Req, Res) => {
         'Statistics.Agents': getStatistics.Statistics.Agents
       });
       
-      return Res.send({ status: 200, statistics: getStatistics });
+      let recreateStatistics = JSON.parse(JSON.stringify(getStatistics));
+      recreateStatistics.allowPicks = true;
+      if (Number(getStatistics.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
+
+      return Res.send({ status: 200, statistics: recreateStatistics });
     },
     'sum_matches': async () => {
       let getStatistics = await servicesSys.getService(getAccount.ID, 'instalockapp');
@@ -53,8 +57,12 @@ exports.load = async (IP, Req, Res) => {
         'Picks': getStatistics.Picks,
         'Statistics.Matches.Total': Number(getStatistics.Statistics.Matches.Total)
       });
+
+      let recreateStatistics = JSON.parse(JSON.stringify(getStatistics));
+      recreateStatistics.allowPicks = true;
+      if (Number(getStatistics.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
       
-      return Res.send({ status: 200, statistics: getStatistics });
+      return Res.send({ status: 200, statistics: recreateStatistics });
     }
   };
   
