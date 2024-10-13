@@ -33,7 +33,7 @@ const getServices = {
 
     let recreateStatistics = JSON.parse(JSON.stringify(getServiceDB));
     recreateStatistics.allowPicks = true;
-    if (Number(getStatistics.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
+    if (Number(getServiceDB.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
     
     return recreateStatistics;
   },
