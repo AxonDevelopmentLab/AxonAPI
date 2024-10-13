@@ -3,8 +3,11 @@ const nodemailer = require('nodemailer');
 const EmailTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'contact.axonlab@gmail.com',
-    pass: process.env.GoogleAuth
+    type: 'OAuth2',
+    user: 'donotreply.axonhub@gmail.com',
+    clientId: process.env.googleClientId,
+    clientSecret: process.env.googleClientSecret,
+    refreshToken: process.env.googleRefreshToken
   }
 });
 
@@ -21,7 +24,7 @@ exports.sendVerificationEmail = (DB, AccountID, Token, HTTP) => {
 exports.sendEmail = (Destinatario, Content) => {
   return new Promise((resolve, reject) => {
     const Options = {
-      from: 'contact.axonlab@gmail.com',
+      from: 'donotreply.axonhub@gmail.com',
       to: Destinatario,
       subject: Content.title,
       html: Content.subject
