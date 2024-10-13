@@ -16,13 +16,7 @@ let cache = {
   hour: 0
 }
 
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'", "https://axonhub.glitch.me"],
-    scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-  },
-}), bodyParser.json(), express.json({ limit: '1mb' }), express.urlencoded({ limit: '1mb', extended: true }), compression(), cors());
+app.use(express.json({ limit: '5mb' }), express.urlencoded({ limit: '5mb', extended: true }), compression(), cors());
 
 app.post('/git', (req, res) => {
   let hmac = crypto.createHmac("sha1", process.env.SECRET);
@@ -51,6 +45,10 @@ app.get('/', (req, res) => {
 });
 
 const routes = [
+  { url: '/services/instalock/statistics', type: 'post', path: 'services/instalock/statistics.js' },
+  { url: '/science/security/get', type: 'get', path: 'science/security_get.js' },
+  { url: '/science/security/post', type: 'post', path: 'science/security_post.js' },
+  { url: '/science/logs', type: 'post', path: 'science/logs.js' },
   { url: '/auth/login', type: 'post', path: 'auth/login.js' },
   { url: '/auth/register', type: 'post', path: 'auth/register.js' },
   { url: '/email_verification', type: 'get', path: 'auth/email_verification.js' },
