@@ -38,7 +38,7 @@ exports.load = async (IP, Req, Res) => {
       
       let recreateStatistics = JSON.parse(JSON.stringify(getStatistics));
       recreateStatistics.allowPicks = true;
-      if (Number(getStatistics.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
+      if (Number(getStatistics.Picks) === 0 && getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
 
       return Res.send({ status: 200, statistics: recreateStatistics });
     },
@@ -60,7 +60,7 @@ exports.load = async (IP, Req, Res) => {
 
       let recreateStatistics = JSON.parse(JSON.stringify(getStatistics));
       recreateStatistics.allowPicks = true;
-      if (Number(getStatistics.Picks) === 0 || getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
+      if (Number(getStatistics.Picks) === 0 && getAccount.Plan.Current === 'free') recreateStatistics.allowPicks = false
       
       return Res.send({ status: 200, statistics: recreateStatistics });
     }
