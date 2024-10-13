@@ -11,7 +11,7 @@ const app = express();
 mongoose.connect(process.env.MongooseAuth, { useNewUrlParser: true, useUnifiedTopology: true });
 
 let cache = {
-  uptime: 0,
+  uptime: 1,
   total: 0,
   hour: 0
 }
