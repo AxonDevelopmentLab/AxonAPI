@@ -41,10 +41,9 @@ exports.load = async (IP, Req, Res) => {
     'sum_matches': async () => {
       let getStatistics = await servicesSys.getService(getAccount.ID, 'instalockapp');
       if (getStatistics === false) return Res.send({ status: 204 });
-      
-      if (Number(getStatistics.Picks) === 0) {
-        if (getAccount.Plan.Current === 'free') return Res.send({ status: 204 });
-      } else {
+
+      if (getAccount.Plan.Current === 'free') {
+        if (Number(getStatistics.Picks) === 0) return Res.send({ status: 204 });
         getStatistics.Picks = Number(getStatistics.Picks) - 1;
       }
       
