@@ -23,7 +23,7 @@ const getServices = {
       discord_username: discord_username
     }
   },
-  "instalockapp": async (MainAccount, SObj) => {
+  "stats.instalockapp": async (MainAccount, SObj) => {
     const ThreadDetected = securityValidator.InstalockAPP(SObj);
     if (ThreadDetected) return { status: 400 };
     
@@ -31,9 +31,14 @@ const getServices = {
     const getServiceDB = await servicesSys.getService(MainAccount.ID, 'instalockapp');
     if (getServiceDB === false) return { status: 400 };
     
-    console.log(getServiceDB)
-    
     return getServiceDB;
+  },
+  "access.instalockapp": async (MainAccount, SObj) => {
+    const ThreadDetected = securityValidator.InstalockAPP(SObj);
+    if (ThreadDetected) return { status: 400 };
+    
+    const getAccess = await servicesSys.getAccess(MainAccount.ID, 'instalockapp');
+    return getAccess;
   }
 }
 

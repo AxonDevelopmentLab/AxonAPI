@@ -1,6 +1,8 @@
 const accountScheme = require("../../database/account");
 const instalockScheme = require("../../database/instalockapp");
 
+const servicesAccess = require("../../database/serviceAccess");
+
 const LatestObjectsVersions = {
   'InstalockAPP': ['1.0.0']
 };
@@ -55,4 +57,21 @@ exports.getService = (AccountID, ServiceName) => {
   };
   
   return services[ServiceName]();
+}
+
+exports.getAccess = async (AccountID, ServiceName) => {
+  const getAccount = await accountScheme.findOne({ ID: AccountID });
+  const accountPlan = getAccount.Plan.Current;
+  
+  const getService = await servicesAccess.findOne({ ServiceName: ServiceName });
+  if (!getService.AccessLimited.includes(accountPlan)) return { status: 400 };
+  
+  let recreateObject = JSON.parse(JSON.stringify(getService));
+  delete recreateObject.ServiceName;
+  delete recreateObject.AccessLimited;
+  delete recreateObject.AppHash;
+  delete recreateObject._id;
+  delete recreateObject.__v;
+  
+  return recreateObject;
 }
