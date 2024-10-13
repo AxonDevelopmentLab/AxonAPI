@@ -33,7 +33,7 @@ exports.load = async (IP, Req, Res) => {
   if (BODY.password !== BODY.confirm_password) return Res.send({ status: 400, message: 'As senhas não batem.' }); 
   
   const getAlternativeAccount = await accountScheme.findOne({ 'Devices.CreatorIP': IP });
-  //if (getAlternativeAccount) return Res.send({ status: 400, message: 'Você não pode ter duas contas.' });
+  if (getAlternativeAccount) return Res.send({ status: 400, message: 'Você não pode ter duas contas.' });
   
   const getAccountByEmail = await accountScheme.findOne({ 'Email.Current': BODY.email });
   if (getAccountByEmail) return Res.send({ status: 400, message: 'Já existe uma conta com esse email.' });
