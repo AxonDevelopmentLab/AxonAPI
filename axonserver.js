@@ -21,7 +21,14 @@ app.post('/git', (req, res) => {
   return res.sendStatus(200);
 });
 
-app.use(helmet())
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "https://axonhub.glitch.me"],
+    scriptSrcAttr: ["'self'", "'unsafe-inline'"],
+  },
+}));
+
 app.use(express.json({ limit: '1mb' }), express.urlencoded({ limit: '1mb', extended: true }), compression(), cors());
 
 let TotalRequests = 0;
