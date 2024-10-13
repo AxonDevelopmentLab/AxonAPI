@@ -4,6 +4,8 @@ const scheme = new mongoose.Schema({
   Percentage: Number,
   TimesUsed: Number,
   MaxTimes: Number,
+  UniqueUse: Boolean,
+  UsedBy: Array,
   isActive: Boolean
 });
 

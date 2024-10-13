@@ -39,7 +39,7 @@ exports.load = async (IP, Req, Res) => {
   
   let DiscountApplies = 0;
   if (BODY.discount && BODY.discount !== '') {
-    const getDiscount = await DiscountService.isValidToken(BODY.discount);
+    const getDiscount = await DiscountService.isValidToken(BODY.discount, getAccount.ID);
     if (getDiscount.status === true) DiscountApplies = getDiscount.discount; 
   }
   

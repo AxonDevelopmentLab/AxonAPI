@@ -26,7 +26,7 @@ exports.load = async (IP, Req, Res) => {
       if (Number(getAccount.Plan.ExpiresIn) > 0) ExpiresIn = Number(getAccount.Plan.ExpiresIn);
       ExpiresIn = ExpiresIn + (60 * 60 * 24 * 30 * Number(getPayment.Duration));
       
-      if (getPayment.CupomCode !== '') DiscountService.sumCupomUse(getPayment.CupomCode);
+      if (getPayment.CupomCode !== '') DiscountService.sumCupomUse(getPayment.CupomCode, getPayment.AccountID);
       await accountScheme.findOneAndUpdate({ ID: getPayment.AccountID }, { 'Plan': { Current: getPayment.RawName, ExpiresIn: ExpiresIn }});
       await paymentsScheme.findOneAndUpdate({ TransactionID: paymentId }, { Approved: true });
 
