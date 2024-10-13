@@ -1,4 +1,6 @@
 const accountScheme = require("../../database/account");
+const securityValidator = require('../background/security_validator.js');
+const servicesSys = require('./services.js');
 
 const getServices = {
   "account": (MainAccount) => {
@@ -20,6 +22,18 @@ const getServices = {
       current_plan_expires_in: MainAccount.Plan.ExpiresIn,
       discord_username: discord_username
     }
+  },
+  "instalockapp": async (MainAccount, SObj) => {
+    const ThreadDetected = securityValidator.InstalockAPP(SObj);
+    if (ThreadDetected) return { status: 400 };
+    
+    await servicesSys.validateUpdateCreate(MainAccount.ID, 'instalockapp');
+    const getServiceDB = await servicesSys.getService(MainAccount.ID, 'instalockapp');
+    if (getServiceDB === false) return { status: 400 };
+    
+    console.log(getServiceDB)
+    
+    return getServiceDB;
   }
 }
 
@@ -37,6 +51,9 @@ exports.load = async (IP, Req, Res) => {
   if (!BODY.services) return Res.send({ status: 400 });
   if (BODY.services.length < 0) return Res.send({ status: 400 });
   
+  let SecurityObject = false;
+  if (BODY.security) SecurityObject = BODY.security;
+  
   if (Number(getAccount.Status.toDelete) !== 0) return Res.send({ status: 400 });
   if (getAccount.Status.isBlocked == true) return Res.send({ status: 400 });
   
@@ -49,7 +66,7 @@ exports.load = async (IP, Req, Res) => {
     if (!AllServices.includes(item)) {
       callback[item] = "non-existent service";
     } else {
-     callback[item] = getServices[item](getAccount); 
+     callback[item] = await getServices[item](getAccount, SecurityObject); 
     }
   };
   
