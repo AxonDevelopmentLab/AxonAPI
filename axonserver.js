@@ -1,7 +1,7 @@
 const express = require('express');
 const compression = require('compression');
 const bodyParser = require('body-parser');
-const { exec, execSync } = require('child_process');
+const { execSync } = require('child_process');
 const helmet = require('helmet');
 const cors = require("cors");
 const crypto = require('crypto');
@@ -14,14 +14,8 @@ app.post('/git', (req, res) => {
   let sig  = "sha1=" + hmac.update(JSON.stringify(req.body)).digest("hex");
   if (req.headers['x-github-event'] == "push" && sig == req.headers['x-hub-signature']) {
     execSync('chmod 777 ./git.sh'); 
-    setTimeout(() => {
-      exec('./git.sh', (err, stdout, stderr) => {
-        if (stdout) console.log(stdout);
-        if (err) console.error(stderr);
-      });
-
-      execSync('refresh');
-    }, 10000)
+    execSync('./git.sh')
+    execSync('refresh');
   };
   
   return res.sendStatus(200);
