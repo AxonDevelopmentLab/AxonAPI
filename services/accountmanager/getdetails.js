@@ -40,6 +40,10 @@ const getServices = {
   "access.instalockapp": async (MainAccount, SObj) => {
     const ThreadDetected = securityValidator.InstalockAPP(SObj);
     if (ThreadDetected) return { status: 400 };
+
+    await servicesSys.validateUpdateCreate(MainAccount.ID, 'instalockapp');
+    const getServiceDB = await servicesSys.getService(MainAccount.ID, 'instalockapp');
+    if (getServiceDB === false) return { status: 400 };
     
     const getAccess = await servicesSys.getAccess(MainAccount.ID, 'instalockapp');
     return getAccess;
