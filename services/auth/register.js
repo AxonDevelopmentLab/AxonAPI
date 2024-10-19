@@ -13,7 +13,7 @@ function hashPassword(password) {
     return { salt: salt, hash: hash };
 }
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   
   const requiredFields = ['username', 'email', 'password', 'confirm_password'];
@@ -22,21 +22,21 @@ exports.load = async (IP, Req, Res) => {
   BODY.username = validator.escape(BODY.username);
   BODY.email = validator.escape(BODY.email);
   
-  if (!validator.isEmail(BODY.email)) return Res.send({ status: 400, message: 'Email inválido.' });
+  if (!validator.isEmail(BODY.email)) return Res.send({ status: 401, message: 'Email inválido.' });
   const acceptedProvetors = ['gmail.com', 'protonmail.com', 'proton.me', 'pm.me', "outlook.com", "hotmail.com", "icloud.com", "live.com"];
-  if (!acceptedProvetors.includes(BODY.email.split('@')[1])) return Res.send({ status: 400, message: 'Provedor de email não aceito.' });
+  if (!acceptedProvetors.includes(BODY.email.split('@')[1])) return Res.send({ status: 401, message: 'Provedor de email não aceito.' });
   
-  if (!validator.isLength(BODY.username, { min: 4, max: 16 })) return Res.send({ status: 400, message: 'Nome de usuário com tamanho inválido.' });
-  if (!validator.matches(BODY.username, /^[a-zA-Z0-9]+$/)) return Res.send({ status: 400, message: 'Nome de usuário com carácteres inválidos.'});
+  if (!validator.isLength(BODY.username, { min: 4, max: 16 })) return Res.send({ status: 401, message: 'Nome de usuário com tamanho inválido.' });
+  if (!validator.matches(BODY.username, /^[a-zA-Z0-9]+$/)) return Res.send({ status: 401, message: 'Nome de usuário com carácteres inválidos.'});
   
-  if (BODY.password.length < 8 || BODY.password.length > 32) return Res.send({ status: 400, message: 'A senha deve ter entre 8 e 32 carácteres.' });
-  if (BODY.password !== BODY.confirm_password) return Res.send({ status: 400, message: 'As senhas não batem.' }); 
+  if (BODY.password.length < 8 || BODY.password.length > 32) return Res.send({ status: 401, message: 'A senha deve ter entre 8 e 32 carácteres.' });
+  if (BODY.password !== BODY.confirm_password) return Res.send({ status: 401, message: 'As senhas não batem.' }); 
   
-  const getAlternativeAccount = await accountScheme.findOne({ 'Devices.CreatorIP': IP });
-  if (getAlternativeAccount) return Res.send({ status: 400, message: 'Você não pode ter duas contas.' });
+  const getAlternativeAccount = await accountScheme.findOne({ 'Devices.CreatorIP': RequestData.IP });
+  if (getAlternativeAccount) return Res.send({ status: 403, message: 'Você não pode ter duas contas.' });
   
   const getAccountByEmail = await accountScheme.findOne({ 'Email.Current': BODY.email });
-  if (getAccountByEmail) return Res.send({ status: 400, message: 'Já existe uma conta com esse email.' });
+  if (getAccountByEmail) return Res.send({ status: 403, message: 'Já existe uma conta com esse email.' });
   
   const AccountID = crypto.randomBytes(8).toString('hex');
   const EmailVerificationToken = crypto.randomBytes(16).toString('hex');
@@ -61,7 +61,7 @@ exports.load = async (IP, Req, Res) => {
     },
     Password: hashPassword(BODY.password),
     Devices: {
-      CreatorIP: IP,
+      CreatorIP: RequestData.IP,
       AllDevices: []
     },
     Plan: {
@@ -79,5 +79,5 @@ exports.load = async (IP, Req, Res) => {
   EmailManager.sendVerificationEmail({ Username: { Current: BODY.username }, Email: { Current: BODY.email }}, AccountID, EmailVerificationToken, Res);
   
   createAccount.save();
-  return Res.send({ status: 400, message: 'Foi enviado um e-mail para validar a sua conta.' })
+  return Res.send({ status: 200, message: 'Foi enviado um e-mail para validar a sua conta.' })
 }

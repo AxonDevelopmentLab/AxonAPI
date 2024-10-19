@@ -29,7 +29,7 @@ exports.isValidToken = async (Token, AccountID) => {
   return { status: true, discount: findCupom };
 }
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   if (!BODY.discount || !BODY.token) return Res.send({ status: 400 });
 

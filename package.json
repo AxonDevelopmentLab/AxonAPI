@@ -13,7 +13,9 @@
     "nodemailer": "^6.9.13",
     "ua-parser-js": "^1.0.39",
     "mercadopago": "^2.0.15",
-    "helmet": "^8.0.0"
+    "helmet": "^8.0.0",
+    "ws": "^8.18.0",
+    "@octokit/rest": "^18.12.0"
   },
   "engines": {
     "node": "16.14.2"

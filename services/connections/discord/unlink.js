@@ -2,15 +2,15 @@ const axios = require('axios');
 
 const accountScheme = require("../../../database/account");
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const TOKEN = Req.body.token;
   const getAccountID = TOKEN.split(':')[0];
   const getAccount = await accountScheme.findOne({ ID: getAccountID });
-  if (!getAccount) return Res.send({ status: 400 });
+  if (!getAccount) return Res.send({ status: 401 });
   
   const getAllSessions = getAccount.Devices.AllDevices;
   const foundSession = getAllSessions.find(i => i.Token === TOKEN);
-  if (!foundSession) return Res.send({ status: 400 });
+  if (!foundSession) return Res.send({ status: 401 });
   
   if (getAccount.Connections && getAccount.Connections.Discord && getAccount.Connections.Discord.ID !== "") {    
     const getConnectionObject = getAccount.Connections.Discord;
@@ -22,6 +22,6 @@ exports.load = async (IP, Req, Res) => {
 
     return Res.send({ status: 200 });    
   } else {
-    return Res.send({ status: 400 }); 
+    return Res.send({ status: 403 }); 
   }
 }

@@ -2,11 +2,9 @@ const axios = require('axios');
 
 const accountScheme = require("../../../database/account");
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const ID = Req.query.id;
   const CODE = Req.query.code;
-  
-  //return Res.send(`<body onload="location.href='` + `https://axonhub.glitch.me/account?message=${encodeURIComponent('')}` + `'"></body>`)
   
   if (!ID) return Res.send(`<body onload="location.href='` + `https://axonhub.glitch.me/account?message=${encodeURIComponent('Ocorreu um erro ao vincular o seu Discord.')}` + `'"></body>`);
   if (!CODE) return Res.send(`<body onload="location.href='` + `https://axonhub.glitch.me/account?message=${encodeURIComponent('Ocorreu um erro ao vincular o seu Discord.')}` + `'"></body>`)

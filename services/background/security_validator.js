@@ -1,7 +1,14 @@
-exports.InstalockAPP = (data) => {
+const crypto = require('crypto');
+const blacklistScheme = require("../../database/blacklist");
+
+exports.InstalockAPP = async (data) => {
   const getSecurityObject = JSON.parse((process.env.ElectronValidation_InstalockAPP).replaceAll('!', '"'));
   if (data.processid && data.processid === getSecurityObject.b) return false;
   
+  const devicesHash = crypto.createHash('sha256').update(JSON.stringify(data.hwid)).digest('hex');
+  const findDeviceBlocked = await blacklistScheme.findOne({ 'DevicesHash': devicesHash });
+  if (findDeviceBlocked) return true;
+
   try {
     let threadDetected = false;
     

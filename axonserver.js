@@ -6,7 +6,10 @@ const express = require('express');
 const crypto = require('crypto');
 const helmet = require('helmet');
 const cors = require("cors");
+const http = require('http');
+
 const app = express();
+const server = http.createServer(app);
 
 mongoose.connect(process.env.MongooseAuth, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -16,7 +19,7 @@ let cache = {
   hour: 0
 }
 
-app.use(express.json({ limit: '5mb' }), express.urlencoded({ limit: '5mb', extended: true }), compression(), cors());
+app.use(express.json({ limit: '1mb' }), express.urlencoded({ limit: '1mb', extended: true }), compression(), cors());
 
 app.post('/git', (req, res) => {
   let hmac = crypto.createHmac("sha1", process.env.SECRET);
@@ -46,9 +49,9 @@ app.get('/', (req, res) => {
 
 const routes = [
   { url: '/services/instalock/statistics', type: 'post', path: 'services/instalock/statistics.js' },
-  { url: '/science/security/get', type: 'get', path: 'science/security_get.js' },
-  { url: '/science/security/post', type: 'post', path: 'science/security_post.js' },
+  { url: '/science/security', type: 'post', path: 'science/security.js' },
   { url: '/science/logs', type: 'post', path: 'science/logs.js' },
+  { url: '/science/analysis', type: 'post', path: 'science/analysis.js' },
   { url: '/auth/login', type: 'post', path: 'auth/login.js' },
   { url: '/auth/register', type: 'post', path: 'auth/register.js' },
   { url: '/email_verification', type: 'get', path: 'auth/email_verification.js' },
@@ -68,13 +71,26 @@ const routes = [
 routes.forEach(route => {
     app[route.type](route.url, (req, res) => {
         cache.total++; cache.hour++;
-        const RequestIP = req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress;
+      
+        const RequestData = {
+          WebSocket: false,
+          SecondEncryption: false,
+          IP: req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress
+        };
+      
         const getService = require('./services/' + route.path);
-        getService.load(RequestIP, req, res, route.url);
+        getService.load(RequestData, req, res, route.url);
     });
 });
 
-const server = app.listen(8080, () => { console.clear(); console.log('[AxonHub] Service is running.')});
+
+server.listen(8080, () => {console.log(`[AxonAPI] Started.`); });
+
+require('./services/science/analysis.js');
+
+const websocket_api = require('./websocket.js')
+websocket_api.run(server, routes);
+
 const background_cron = require('./services/background/cron.js');
 background_cron.start();
 

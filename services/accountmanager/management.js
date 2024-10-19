@@ -20,16 +20,16 @@ const subservices = {
     
     NEW_USERNAME = validator.escape(NEW_USERNAME);
     
-    if (DB.Username.Current === NEW_USERNAME) return HTTP.send({ status: 400, message: 'Você já está utilizando esse nome de usuário.' })
+    if (DB.Username.Current === NEW_USERNAME) return HTTP.send({ status: 403, message: 'Você já está utilizando esse nome de usuário.' })
     
-    if (!validator.isLength(NEW_USERNAME, { min: 4, max: 16 })) return HTTP.send({ status: 400, message: 'O nome de usuário deve conter entre 4 e 16 caracteres.' });
-    if (!validator.matches(NEW_USERNAME, /^[a-zA-Z0-9]+$/)) return HTTP.send({ status: 400, message: 'O nome de usuário não pode conter caracteres inválidos.' })
+    if (!validator.isLength(NEW_USERNAME, { min: 4, max: 16 })) return HTTP.send({ status: 403, message: 'O nome de usuário deve conter entre 4 e 16 caracteres.' });
+    if (!validator.matches(NEW_USERNAME, /^[a-zA-Z0-9]+$/)) return HTTP.send({ status: 403, message: 'O nome de usuário não pode conter caracteres inválidos.' })
 
-    if (PASSWORD.length < 8 || PASSWORD.length > 32) return HTTP.send({ status: 400, message: 'Senha incorreta.' })
-    if (PASSWORD !== CONFIRM_PASSWORD) return HTTP.send({ status: 400, message: 'As senhas não batem.' });
+    if (PASSWORD.length < 8 || PASSWORD.length > 32) return HTTP.send({ status: 403, message: 'Senha incorreta.' })
+    if (PASSWORD !== CONFIRM_PASSWORD) return HTTP.send({ status: 403, message: 'As senhas não batem.' });
     
     const PasswordToCompare = hashPassword(PASSWORD, DB.Password.salt);
-    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 400, message: 'Senha incorreta.' });
+    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 403, message: 'Senha incorreta.' });
     
     const UsernameObject = DB.Username;
     UsernameObject.Previous.push(UsernameObject.Current);
@@ -44,15 +44,15 @@ const subservices = {
     const CONFIRM_NEW_PASSWORD = Args[1];
     const OLD_PASSWORD = Args[2];
 
-    if (NEW_PASSWORD.length < 8 || NEW_PASSWORD.length > 32) return HTTP.send({ status: 400, message: 'A nova senha deve conter entre 8 e 32 caracteres.' })
-    if (CONFIRM_NEW_PASSWORD !== NEW_PASSWORD) return HTTP.send({ status: 400, message: 'As senhas não batem.' });
-    if (OLD_PASSWORD.length < 8 || OLD_PASSWORD.length > 32) return HTTP.send({ status: 400, message: 'Senha incorreta.' });
+    if (NEW_PASSWORD.length < 8 || NEW_PASSWORD.length > 32) return HTTP.send({ status: 403, message: 'A nova senha deve conter entre 8 e 32 caracteres.' })
+    if (CONFIRM_NEW_PASSWORD !== NEW_PASSWORD) return HTTP.send({ status: 403, message: 'As senhas não batem.' });
+    if (OLD_PASSWORD.length < 8 || OLD_PASSWORD.length > 32) return HTTP.send({ status: 403, message: 'Senha incorreta.' });
     
     const PasswordToCompare = hashPassword(OLD_PASSWORD, DB.Password.salt);
-    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 400, message: 'Senha incorreta.' })
+    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 403, message: 'Senha incorreta.' })
     
     const GenerateHashForNewPassword = hashPassword(NEW_PASSWORD);
-    if (hashPassword(NEW_PASSWORD, DB.Password.salt).hash === DB.Password.hash) return HTTP.send({ status: 400, message: 'Você já está utilizando essa senha.' })
+    if (hashPassword(NEW_PASSWORD, DB.Password.salt).hash === DB.Password.hash) return HTTP.send({ status: 403, message: 'Você já está utilizando essa senha.' })
     
     let DisconnectAllDevices = DB.Devices;
     DisconnectAllDevices.AllDevices = [];
@@ -76,19 +76,19 @@ const subservices = {
     
     NEW_EMAIL = validator.escape(NEW_EMAIL);
     
-    if (NEW_EMAIL === DB.Email.Current) return HTTP.send({ status: 400, message: 'Você já está utilizando esse email.' })
-    if (!validator.isEmail(NEW_EMAIL)) return HTTP.send({ status: 400, message: 'Email inválido.' })
+    if (NEW_EMAIL === DB.Email.Current) return HTTP.send({ status: 403, message: 'Você já está utilizando esse email.' })
+    if (!validator.isEmail(NEW_EMAIL)) return HTTP.send({ status: 403, message: 'Email inválido.' })
     const acceptedProvetors = ['gmail.com', 'protonmail.com', 'proton.me', 'pm.me', "outlook.com", "hotmail.com", "icloud.com", "live.com"];
-    if (!acceptedProvetors.includes(NEW_EMAIL.split('@')[1])) return HTTP.send({ status: 400, message: 'Email inválido.' })
+    if (!acceptedProvetors.includes(NEW_EMAIL.split('@')[1])) return HTTP.send({ status: 403, message: 'Email inválido.' })
     
-    if (PASSWORD.length < 8 || PASSWORD.length > 32) return HTTP.send({ status: 400, message: 'Senha incorreta.' })
-    if (PASSWORD !== CONFIRM_PASSWORD) return HTTP.send({ status: 400, message: 'As senhas não batem.' })
+    if (PASSWORD.length < 8 || PASSWORD.length > 32) return HTTP.send({ status: 403, message: 'Senha incorreta.' })
+    if (PASSWORD !== CONFIRM_PASSWORD) return HTTP.send({ status: 403, message: 'As senhas não batem.' })
     
     const PasswordToCompare = hashPassword(PASSWORD, DB.Password.salt);
-    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 400, message: 'Senha incorreta.' })
+    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 403, message: 'Senha incorreta.' })
     
     const findAccountByEmail = await accountScheme.findOne({ 'Email.Current': NEW_EMAIL });
-    if (findAccountByEmail) return HTTP.send({ status: 400, message: 'Esse email já está em uso.' })
+    if (findAccountByEmail) return HTTP.send({ status: 403, message: 'Esse email já está em uso.' })
     
     const generateVerificationToken = crypto.randomBytes(16).toString('hex');
     let DisconnectAllDevices = DB.Devices;
@@ -120,20 +120,20 @@ const subservices = {
     
     CONFIRMATION_PHRASE = validator.escape(CONFIRMATION_PHRASE);
     
-    if (PASSWORD.length < 8 || PASSWORD.length > 32) return HTTP.send({ status: 400, message: 'Senha incorreta.' });
-    if (PASSWORD !== CONFIRM_PASSWORD) return HTTP.send({ status: 400, message: 'As senhas não batem.' })
+    if (PASSWORD.length < 8 || PASSWORD.length > 32) return HTTP.send({ status: 403, message: 'Senha incorreta.' });
+    if (PASSWORD !== CONFIRM_PASSWORD) return HTTP.send({ status: 403, message: 'As senhas não batem.' })
     
     const PasswordToCompare = hashPassword(PASSWORD, DB.Password.salt);
-    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 400, message: 'Senha incorreta.' })
+    if (DB.Password.hash !== PasswordToCompare.hash) return HTTP.send({ status: 403, message: 'Senha incorreta.' })
     
-    if (CONFIRMATION_PHRASE !== "deletar") return HTTP.send({ status: 400, message: 'Frase de segurança incorreta.' })
+    if (CONFIRMATION_PHRASE !== "deletar") return HTTP.send({ status: 403, message: 'Frase de segurança incorreta.' })
     
     await accountScheme.findOneAndUpdate({ ID: DB.ID }, { 'Status.toDelete': Math.round(Date.now() / 1000) + (60 * 60 * 24 * 7) });
     return HTTP.send({ status: 200, redirect: `https://axonhub.glitch.me/account?message=${encodeURIComponent('Você foi desconectado da sua conta.<br>A sua conta entrou pra fila para ser deletada.')}&changetype=true`, message: 'A sua conta entrou na fila para ser deletada com sucesso.' })
   },
 }
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   const ARGS = BODY.args;
   

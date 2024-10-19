@@ -9,7 +9,7 @@ const axios = require('axios');
 
 const client = new mercadopago.MercadoPagoConfig({ accessToken: process.env.MercadoPagoToken });
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const notification = Req.body;
   
   let paymentId;

@@ -59,12 +59,13 @@ exports.getService = (AccountID, ServiceName) => {
   return services[ServiceName]();
 }
 
-exports.getAccess = async (AccountID, ServiceName) => {
+exports.getAccess = async (WsStatus, AccountID, ServiceName) => {
   const getAccount = await accountScheme.findOne({ ID: AccountID });
   const accountPlan = getAccount.Plan.Current;
   
   const getService = await servicesAccess.findOne({ ServiceName: ServiceName });
   if (!getService.AccessLimited.includes(accountPlan)) return { status: 400 };
+  if (getService.WsRequired === true && WsStatus !== true) return { status: 400 }
   
   let recreateObject = JSON.parse(JSON.stringify(getService));
   delete recreateObject.ServiceName;

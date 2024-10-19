@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const accountScheme = require("../../database/account");
 const accountManagerCreator = require('../accountmanager/services.js');
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const INVALID_ACCOUNT_URL = `https://axonhub.glitch.me/account?message=${encodeURIComponent('Esse link de validação está expirado.<br>Crie novamente a conta.')}`;
   const SUCESSFULLY_VALIDATION = `https://axonhub.glitch.me/account?message=${encodeURIComponent('A sua conta foi verificada com sucesso!<br>Realize o login.')}&changetype=true`;
   

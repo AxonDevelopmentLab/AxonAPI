@@ -10,7 +10,7 @@ const Categories = {
   '6': 'Conta bloqueada por atividade suspeita.'
 }
 
-exports.load = (IP, Req, Res) => {
+exports.load = (RequestData, Req, Res) => {
   const BODY = Req.body;
   
   BODY.contact.name = validator.escape(BODY.contact.name);
@@ -34,7 +34,7 @@ exports.load = (IP, Req, Res) => {
       embeds: [
           {
               title: BODY.ticket.title,
-              description: `**Enviado por:**\n${BODY.contact.name} (${IP})\n\n**Email de Contato:**\n${BODY.contact.email}\n\n**Categoria do Ticket**\n${Categories[BODY.ticket.category]}\n\n**Conteúdo do Ticket**:\n${BODY.ticket.content}`,
+              description: `**Enviado por:**\n${BODY.contact.name} (${RequestData.IP})\n\n**Email de Contato:**\n${BODY.contact.email}\n\n**Categoria do Ticket**\n${Categories[BODY.ticket.category]}\n\n**Conteúdo do Ticket**:\n${BODY.ticket.content}`,
               color: 0x352F44
           }
       ]

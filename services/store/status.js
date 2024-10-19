@@ -1,7 +1,7 @@
 const accountScheme = require("../../database/account");
 const paymentsScheme = require("../../database/payments");
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   
   if (!BODY.processid) return Res.send({ status: 403, message: 'Acesso não permitido.' });

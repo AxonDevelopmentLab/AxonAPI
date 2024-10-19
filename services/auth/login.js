@@ -14,21 +14,21 @@ function hashPassword(password, saltInput) {
     return hash;
 }
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   
   const requiredFields = ['email', 'password'];
   for (const field of requiredFields) if (!BODY[field] || typeof BODY[field] !== 'string') return Res.send({ status: 400, message: 'Todos os campos são obrigatórios.' });
   
   BODY.email = validator.escape(BODY.email);
-  if (!validator.isEmail(BODY.email)) return Res.send({ status: 400, message: 'Credenciais inválidas.' });
+  if (!validator.isEmail(BODY.email)) return Res.send({ status: 401, message: 'Credenciais inválidas.' });
   
   const getAccountByEmail = await accountScheme.findOne({ 'Email.Current': BODY.email });
-  if (!getAccountByEmail) return Res.send({ status: 400, message: 'Não existe nenhuma conta com esse e-mail.' });
-  if (getAccountByEmail.Email.Verified.Status === false) return Res.send({ status: 400, message: 'A sua conta não está verificada.<br>Acesse o seu e-mail para verificar-la.' });
+  if (!getAccountByEmail) return Res.send({ status: 401, message: 'Não existe nenhuma conta com esse e-mail.' });
+  if (getAccountByEmail.Email.Verified.Status === false) return Res.send({ status: 403, message: 'A sua conta não está verificada.<br>Acesse o seu e-mail para verificar-la.' });
   
   if (Number(getAccountByEmail.Status.RateLimit) === 4) {
-    Res.send({ status: 400, message: 'Ocorreram muitas tentativas de login, tente novamente mais tarde.' });
+    Res.send({ status: 403, message: 'Ocorreram muitas tentativas de login, tente novamente mais tarde.' });
     setTimeout(async () => {
       const getAccountStatusUpdated = await accountScheme.findOne({ ID: getAccountByEmail.ID });
       const getAlreadyTimesTriedUpdated = Number(getAccountStatusUpdated.Status.RateLimit);
@@ -41,11 +41,11 @@ exports.load = async (IP, Req, Res) => {
   if (getAccountByEmail.Password.hash !== PasswordToCompare) {
     const getAlreadyTimesTried = Number(getAccountByEmail.Status.RateLimit);
     await accountScheme.findOneAndUpdate({ ID: getAccountByEmail.ID }, { 'Status.RateLimit': getAlreadyTimesTried + 1 });
-    return Res.send({ status: 400, message: 'Credenciais inválidas.' })
+    return Res.send({ status: 401, message: 'Credenciais inválidas.' })
   };
     
-  if (Number(getAccountByEmail.Status.toDelete) !== 0) return Res.send({ status: 400, message: 'Esta conta está no prazo para ser deletada.<br>Entre em contato com suporte para reverter.' });
-  if (getAccountByEmail.Status.isBlocked == true) return Res.send({ status: 400, message: 'A sua conta está bloqueada, entre em contato com o suporte.' });
+  if (Number(getAccountByEmail.Status.toDelete) !== 0) return Res.send({ status: 403, message: 'Esta conta está no prazo para ser deletada.<br>Entre em contato com suporte para reverter.' });
+  if (getAccountByEmail.Status.isBlocked == true) return Res.send({ status: 403, message: 'A sua conta está bloqueada, entre em contato com o suporte.' });
   
   let DeviceName = '';
   try {
@@ -79,7 +79,7 @@ exports.load = async (IP, Req, Res) => {
   }
   
   const getCurrentDevices = getAccountByEmail.Devices.AllDevices
-  let foundSession = getCurrentDevices.find(i => (i.IP === IP && i.Device === DeviceName));
+  let foundSession = getCurrentDevices.find(i => (i.IP === RequestData.IP && i.Device === DeviceName));
   
   if (foundSession) {
     foundSession.lastTimeSeen = Math.round(Date.now() / 1000) - 20;
@@ -93,13 +93,13 @@ exports.load = async (IP, Req, Res) => {
     let IPLocation = 'Unidentified.';
     
     try {
-      const response = await axios.get(`https://ipinfo.io/${IP}/json`);
+      const response = await axios.get(`https://ipinfo.io/${RequestData.IP}/json`);
       IPLocation = `${response.data.country}, ${response.data.region}, ${response.data.city}`;
     } catch (error) {
       IPLocation = 'Unlocalizated.'
     }
     
-    getCurrentDevices.push({ SessionID: SessionID, lastTimeSeen: (Math.round(Date.now() / 1000) - 20), IP: IP, Location: IPLocation, Device: DeviceName, Token: AcessToken })
+    getCurrentDevices.push({ SessionID: SessionID, lastTimeSeen: (Math.round(Date.now() / 1000) - 20), IP: RequestData.IP, Location: IPLocation, Device: DeviceName, Token: AcessToken })
     await accountScheme.findOneAndUpdate({ ID: getAccountByEmail.ID }, { 'Devices.AllDevices': getCurrentDevices });
     return Res.send({ status: 200, auth_pass: AcessToken, account_id: getAccountByEmail.ID }) 
   }

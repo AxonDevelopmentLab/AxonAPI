@@ -3,7 +3,7 @@ const securityValidator = require('../background/security_validator.js');
 const servicesSys = require('./services.js');
 
 const getServices = {
-  "account": (MainAccount) => {
+  "account": (WsStatus, MainAccount) => {
     let allDevices = MainAccount.Devices.AllDevices.forEach(Device => {
       delete Device.Token;
       delete Device.IP;
@@ -23,9 +23,9 @@ const getServices = {
       discord_username: discord_username
     }
   },
-  "stats.instalockapp": async (MainAccount, SObj) => {
-    const ThreadDetected = securityValidator.InstalockAPP(SObj);
-    if (ThreadDetected) return { status: 400 };
+  "stats.instalockapp": async (WsStatus, MainAccount, SObj) => {
+    const ThreadDetected = await securityValidator.InstalockAPP(SObj);
+    if (ThreadDetected) return { status: 403 };
     
     await servicesSys.validateUpdateCreate(MainAccount.ID, 'instalockapp');
     const getServiceDB = await servicesSys.getService(MainAccount.ID, 'instalockapp');
@@ -37,20 +37,20 @@ const getServices = {
     
     return recreateStatistics;
   },
-  "access.instalockapp": async (MainAccount, SObj) => {
-    const ThreadDetected = securityValidator.InstalockAPP(SObj);
-    if (ThreadDetected) return { status: 400 };
+  "access.instalockapp": async (WsStatus, MainAccount, SObj) => {
+    const ThreadDetected = await securityValidator.InstalockAPP(SObj);
+    if (ThreadDetected) return { status: 403 };
 
     await servicesSys.validateUpdateCreate(MainAccount.ID, 'instalockapp');
     const getServiceDB = await servicesSys.getService(MainAccount.ID, 'instalockapp');
     if (getServiceDB === false) return { status: 400 };
     
-    const getAccess = await servicesSys.getAccess(MainAccount.ID, 'instalockapp');
+    const getAccess = await servicesSys.getAccess(WsStatus, MainAccount.ID, 'instalockapp');
     return getAccess;
   }
 }
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   
   const getAccountID = BODY.token.split(':')[0];
@@ -67,8 +67,8 @@ exports.load = async (IP, Req, Res) => {
   let SecurityObject = false;
   if (BODY.security) SecurityObject = BODY.security;
   
-  if (Number(getAccount.Status.toDelete) !== 0) return Res.send({ status: 400 });
-  if (getAccount.Status.isBlocked == true) return Res.send({ status: 400 });
+  if (Number(getAccount.Status.toDelete) !== 0) return Res.send({ status: 401 });
+  if (getAccount.Status.isBlocked == true) return Res.send({ status: 401 });
   
   foundSession.lastTimeSeen = Math.round(Date.now() / 1000) - 20;
   await accountScheme.findOneAndUpdate({ ID: getAccount.ID }, { 'Devices.AllDevices': getAllSessions });
@@ -79,7 +79,7 @@ exports.load = async (IP, Req, Res) => {
     if (!AllServices.includes(item)) {
       callback[item] = "non-existent service";
     } else {
-     callback[item] = await getServices[item](getAccount, SecurityObject); 
+     callback[item] = await getServices[item](RequestData.WebSocket, getAccount, SecurityObject); 
     }
   };
   

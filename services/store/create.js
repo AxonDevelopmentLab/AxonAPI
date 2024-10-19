@@ -20,7 +20,7 @@ const acceptablePlans = Object.keys(PlansPrice);
 const acceptableDurations = ['1', '3', '6', '9', '12'];
 const acceptablePaymentMethods = ['PIX'];
 
-exports.load = async (IP, Req, Res) => {
+exports.load = async (RequestData, Req, Res) => {
   const BODY = Req.body;
   
   if (!BODY.token || !BODY.plan || !BODY.duration || !BODY.payment_method) return Res.send({ status: 400, message: 'Acesso não permitido.' });
