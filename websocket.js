@@ -1,32 +1,14 @@
 const WebSocket = require('ws');
-const crypto = require('crypto');
 
 exports.run = (Server, routes) => {
   const wss = new WebSocket.Server({ server: Server, path: '/websocket' });
 
-  let temp_ws = [];
-  const wssettings = {
-    add: (Token, WS) => {
-
-    },
-    remove: (Token) => {
-
-    },
-    exists: (Token) => {
-
-    }
-  }
-
-  wss.on('connection', (ws) => {
-      const generateToken = crypto.randomBytes(16).toString('hex');
-      wssettings.add(generateToken, ws);
-
+  wss.on('connection', (ws, req) => {
       ws.on('message', (message) => {
         let RequestData = {
           WebSocket: true,
-          SecondEncryption: false,
-          IP: '0.0.0.0'
-        }
+          IP: req.socket.remoteAddress
+        };
 
         try {
           const wsBody = JSON.parse(message);
@@ -34,6 +16,8 @@ exports.run = (Server, routes) => {
           if (!wsBody.data) return ws.send(JSON.stringify({ status: 400 }));
 
           const findRoute = routes.find(route => route.url === wsBody.route);
+          if (!findRoute) return ws.send(JSON.stringify({ status: 400 }));
+
           const getService = require('./services/' + findRoute.path);
 
           const req = { body: wsBody.data };
@@ -42,12 +26,8 @@ exports.run = (Server, routes) => {
 
           return getService.load(RequestData, req, res, findRoute.url);
         } catch (error) {
-          return ws.send(JSON.stringify({ status: 400 }));
+          return ws.send(JSON.stringify({ status: 400, log: 'Error ocurred at transforming websocket request into restful request. This problem ocurred in the server-side connection manager, contact the support.' }));
         };
-      });
-
-      ws.on('close', () => {
-        wssettings.remove(generateToken);
       });
   });
 }

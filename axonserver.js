@@ -12,15 +12,9 @@ const app = express();
 const server = http.createServer(app);
 
 mongoose.connect(process.env.MongooseAuth, { useNewUrlParser: true, useUnifiedTopology: true });
-
-let cache = {
-  uptime: 1,
-  total: 0,
-  hour: 0
-}
-
 app.use(express.json({ limit: '1mb' }), express.urlencoded({ limit: '1mb', extended: true }), compression(), cors());
 
+app.get('/', (req, res) => { res.send({ status: 200 }) });
 app.post('/git', (req, res) => {
   let hmac = crypto.createHmac("sha1", process.env.SECRET);
   let sig  = "sha1=" + hmac.update(JSON.stringify(req.body)).digest("hex");
@@ -32,19 +26,6 @@ app.post('/git', (req, res) => {
   };
   
   return res.sendStatus(200);
-});
-
-app.get('/', (req, res) => {
-  cache.total++;
-  cache.hour++;
-  res.send({ status: 200, requests: {
-    total: cache.total,
-    last_hour: cache.hour,
-    statistics: {
-      average_per_hour: Number(cache.total / cache.uptime).toFixed(2),
-      ratelimit: `${cache.hour}/4000`
-    }
-  }})
 });
 
 const routes = [
@@ -70,12 +51,10 @@ const routes = [
 
 routes.forEach(route => {
     app[route.type](route.url, (req, res) => {
-        cache.total++; cache.hour++;
       
         const RequestData = {
           WebSocket: false,
-          SecondEncryption: false,
-          IP: req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress
+          IP: req.headers['x-forwarded-for']?.split(',').shift()
         };
       
         const getService = require('./services/' + route.path);
@@ -85,13 +64,6 @@ routes.forEach(route => {
 
 
 server.listen(8080, () => {console.log(`[AxonAPI] Started.`); });
-
 require('./services/science/analysis.js');
-
-const websocket_api = require('./websocket.js')
-websocket_api.run(server, routes);
-
-const background_cron = require('./services/background/cron.js');
-background_cron.start();
-
-setInterval(() => { cache.uptime++; cache.hour = 0; }, 1000 * 60 * 60);
+require('./websocket.js').run(server, routes);
+require('./services/background/cron.js').start();
