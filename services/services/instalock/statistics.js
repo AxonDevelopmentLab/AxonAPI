@@ -45,7 +45,7 @@ exports.load = async (RequestData, Req, Res) => {
       delete recreateStatistics._id;
       delete recreateStatistics.ID;
       
-      return Res.send({ status: 403, statistics: recreateStatistics });
+      return Res.send({ status: 200, statistics: recreateStatistics });
     },
     'sum_matches': async () => {
       let getStatistics = await servicesSys.getService(getAccount.ID, 'instalockapp');
@@ -72,7 +72,7 @@ exports.load = async (RequestData, Req, Res) => {
       delete recreateStatistics._id;
       delete recreateStatistics.ID;
       
-      return Res.send({ status: 403, statistics: recreateStatistics });
+      return Res.send({ status: 200, statistics: recreateStatistics });
     }
   };
   
